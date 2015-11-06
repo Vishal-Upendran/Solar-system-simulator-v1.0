@@ -1,0 +1,109 @@
+from visual import *
+from time import clock
+from random import random,uniform
+import numpy as np
+import math
+
+# Planets around sun
+# Determine masses, radii
+
+G=6.67e-11
+Psun=vector(0,0,0)
+dt=10
+#list as mercury, venus.... to pluto
+M_planet=[330e25,4800e25,5973e25,641e25,1.89e31,5.68e30,86e30,10e30]
+R_planet=[2.4e7,6.0e7,6.3e7,3.3e7,6.9e8,5.8e8,2.5e8,2.4e8]
+Pos_planet=[58e8,108e8,150e8,227e8,779e8,1428e8,2974e8,4506e8]
+# Moons in order Ganeymade,callisto,io,europa,titan,moon,triton
+M_moon=[148.2e21,107.6e21,89.3e21,48e21,134.5e21,73.5e21,21.5e21]
+Pos_moon=[1.07e9,1.883e9,7.21e8,9.7e8,1.221e9,3.84e8,3.54e8]
+R_moon=[11e6,9e6,4e6,1e6,10e7,7e6,2e6]
+Msun=1.8e31
+Rsun=6.9e8
+Nplanet=len(M_planet)
+
+Planet=[]
+poslist=[]
+momlist=[]
+vlist=[]
+Mlist=[]
+sphere(pos=Psun,radius=Rsun, color=color.yellow)
+
+#Setup the initial conditions for the planets
+for i in range(0,Nplanet):
+    Planet=Planet+[sphere(pos=vector(Pos_planet[i],0,0), radius=R_planet[i],color=color.blue, make_trail=True)]
+    poslist.append(Pos_planet[i])
+    V=0.8*sqrt(G*Msun/Pos_planet[i])
+    Planet[i].mass=M_planet[i]
+    Planet[i].radius=R_planet[i]
+    Planet[i].velocity=vector(0,0,V)
+    Mlist.append(M_planet[i])
+
+#Setup initial conditions for the moons
+Moon=[]
+Nmoon=len(M_moon)
+for i in range(0,Nmoon):
+    if i&lt;4:
+        Moon=Moon+[sphere(pos=vector(Pos_planet[4]+Pos_moon[i],0,0), radius=R_moon[i],color=color.red,make_trail=True)]
+        Moon[i].mass=M_moon[i]
+        V=1.1*sqrt(G*M_planet[4]/Pos_moon[i])
+        Moon[i].vel=vector(0,0,V)
+    if i==4:
+        Moon=Moon+[sphere(pos=vector(Pos_planet[5]+Pos_moon[i],0,0), radius=R_moon[i],color=color.red,make_trail=True)]
+        Moon[i].mass=M_moon[i]
+        V=0.8*sqrt(G*M_planet[5]/Pos_moon[i])
+        Moon[i].vel=vector(0,0,V)
+    if i==5:
+        Moon=Moon+[sphere(pos=vector(Pos_planet[2]+Pos_moon[i],0,), radius=R_moon[i],color=color.red,make_trail=True)]
+        Moon[i].mass=M_moon[i]
+        V=0.7*sqrt(G*M_planet[2]/Pos_moon[i]+G*Msun/sqrt(Pos_planet[2]**2+Pos_moon[i]**2))
+        Moon[i].vel=vector(0,0,V)
+    if i==6:
+        Moon=Moon+[sphere(pos=vector(Pos_planet[7]+Pos_moon[i],0,0), radius=R_moon[i],color=color.red,make_trail=True)]
+        Moon[i].mass=M_moon[i]
+        V=0.8*sqrt(G*M_planet[7]/Pos_moon[i])
+        Moon[i].vel=vector(0,0,-V)
+#Found out the initial velocity, position. Update according to gravitation.
+
+def acc(pos,pos1,m):
+    r=pos1-pos
+    rmag=mag(r)
+    a=(G*m/(rmag**3))*r
+    return a
+
+while True:
+    rate(80)
+    for k in range(0,Nmoon):
+        if k&lt;4:
+            a=acc(Moon[k].pos,Planet[4].pos,Planet[4].mass)+acc(Moon[k].pos,Psun,Msun)
+            dv=a*dt
+            Moon[k].vel=dv+Moon[k].vel
+            Moon[k].pos=Moon[k].pos+Moon[k].vel*dt
+            print a
+        if k==4:
+            a=acc(Moon[k].pos,Planet[5].pos,Planet[5].mass)+acc(Moon[k].pos,Psun,Msun)
+            dv=a*dt
+            Moon[k].vel=dv+Moon[k].vel
+            Moon[k].pos=Moon[k].pos+Moon[k].vel*dt            
+        if k==5:
+            a=acc(Moon[k].pos,Planet[2].pos,Planet[2].mass)
+            dv=a*dt
+            Moon[k].vel=dv+Moon[k].vel
+            Moon[k].pos=Moon[k].pos+Moon[k].vel*dt
+        if k==6:
+            a=acc(Moon[k].pos,Planet[7].pos,Planet[7].mass)+acc(Moon[k].pos,Psun,Msun)
+            dv=a*dt
+            Moon[k].vel=dv+Moon[k].vel
+            Moon[k].pos=Moon[k].pos+Moon[k].vel*dt
+#        print(str(Moon[k].pos)+&#039;velocity&#039;+str(Moon[k].vel))
+        
+
+
+    for i in range(0,Nplanet):
+        a=acc(Planet[i].pos,Psun,Msun)
+        a2=vector(0,0,0)
+     #   for j in range(0,Nplanet):
+      #      if i!=j:
+       #         a2=a2+acc(Planet[i].pos,Planet[j].pos,Planet[j].mass)
+        Planet[i].velocity=Planet[i].velocity+a*dt+a2*dt
+        Planet[i].pos=Planet[i].velocity*dt+Planet[i].pos
